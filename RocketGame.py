@@ -307,7 +307,7 @@ def main():
             shot_timer -= 1
         # ammu välilyönnillä pelitilassa
         if keys[pygame.K_SPACE] and shot_timer <= 0:
-            # luo kaksi projektoria (vasen ja oikea tykki)
+            # luo kaksi ammusta (vasen ja oikea tykki)
             spawn_y = alus_y + (SHIP_H // 4)
             left_x = alus_x + int(SHIP_W * 0.25)
             right_x = alus_x + int(SHIP_W * 0.75)
