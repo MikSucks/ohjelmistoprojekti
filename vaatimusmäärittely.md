@@ -55,6 +55,31 @@ F8 — Ohjeet ja käyttötapa
 - Prioriteetti: Matala
 - Hyväksymiskriteeri: Ohjeet saavutettavissa päävalikosta.
 
+F9 — Hahmon valitseminen 
+- Kuvaus: Pelaaja voi valita haluamansa hahmon (aluksen). Kaikki hahmot näyttävät erilaiselta (joko eri värisiä tai kokonaan erilainen alus). Hahmo ampuu myös eri tavalla. 
+- Prioriteetti: Matala
+- Hyväksymiskriteeri: Pelaaja voi valita eri hahmon, joka muuttaa ulkonäköä.
+
+F10 — Pelin vaikeustaso
+- Kuvaus: Pelissä on vähintään kaksi vaikeustasoa (esim. helppo / normaali), jotka vaikuttavat vihollisten määrään tai nopeuteen.
+- Prioriteetti: Keskitaso
+- Hyväksymiskriteeri: Pelaaja voi valita vaikeustason ennen pelin alkua, ja ero on havaittavissa pelissä.
+
+F11 — Tauko-toiminto (?)
+- Kuvaus: Pelaaja voi keskeyttää pelin (pause) ja jatkaa myöhemmin.
+- Prioriteetti: Keskitaso/matala
+- Hyväksymiskriteeri: Peli pysähtyy tauon aikana eikä pelitila muutu.
+
+F12 — Visuaalinen palaute
+- Kuvaus: Osumista ja tapahtumista annetaan visuaalista palautetta (välähdys, räjähdysanimaatio, ruudun tärähdys).
+- Prioriteetti: Matala
+- Hyväksymiskriteeri: Osuma tai vihollisen tuhoutuminen näkyy selkeästi pelaajalle.
+
+F13 — Kerättävät esineet (power-upit)
+- Kuvaus: Pelissä voi esiintyä kerättäviä esineitä, jotka antavat väliaikaisia etuja (nopeampi ammus, lisäelämä).
+- Prioriteetti: Matala
+- Hyväksymiskriteeri: Power-up vaikuttaa pelaajan toimintaan määräajan tai pysyvästi.
+
 ## Ei-toiminnalliset vaatimukset (Non-Functional Requirements)
 
 NFR1 — Suorituskyky
@@ -79,6 +104,7 @@ NFR5 — Huollettavuus
 
 NFR6 — Lokalisaatio
 - Kuvaus: Pääasiallinen kieli on suomi, mutta tekstit tullaan pitämään erillisessä resurssitiedostossa, mikä mahdollistaa laajennuksen muihin kieliin.
+- Mahdollinen tavoite: Olisi vaihtoehtona valita englannin kieli. 
 
 NFR7 — Turvallisuus
 - Kuvaus: Sovellus ei kerää henkilökohtaisia tietoja eikä lähetä dataa verkkoon.
