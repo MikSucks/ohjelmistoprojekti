@@ -35,3 +35,18 @@ git push origin main
 ---
 
 Komennolla `git pull --rebase` saa päivitettyä repon ajantasalle, mutta forkatuissa projekteissa upstreamin muutokset pitää hakea erikseen yllä olevilla komennoilla.
+
+#### Esimerkki: Päivitä fork alkuperäisestä reposta (upstream)
+
+1. Hae muutokset alkuperäisestä reposta:
+	```sh
+	git fetch upstream
+	```
+2. Siirrä (rebase) muutokset omaan branchiin:
+	```sh
+	git rebase upstream/main
+	```
+3. Jos haluat viedä muutokset omaan GitHub-forkkiin:
+	```sh
+	git push origin main
+	```
