@@ -4,8 +4,10 @@ Alukset_Spritet/
 
 # If you keep the full Tite24 project under the repo root, ignore it too
 Tite24_2Dpeli/
+testikansio/
 
 # Common Python artifacts
 __pycache__/
 *.py[cod]
 .venv/
+
