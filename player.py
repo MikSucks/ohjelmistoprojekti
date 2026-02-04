@@ -12,18 +12,23 @@ class Player(pygame.sprite.Sprite):
     - draw(screen, cam_x, cam_y) piirtää pelaajan ruudulle ottaen kameran offsetin huomioon
     """
 
-    def __init__(self, frames, x, y, boost_frames=None):
+    def __init__(self, scale_factor, frames, x, y, boost_frames=None):
         super().__init__()
+        # tallennetaan skaalaustekijä, jotta voimme esiskaalata kehykset
+        self.scale_factor = scale_factor
         # tukee erillisiä animaatioita: move ja boost
+        # esiskaalataan annettu kehyslista (jos olemassa)
+        move_frames = frames if frames else [pygame.Surface((32, 32), pygame.SRCALPHA)]
         self.animations = {
-            'move': frames or [pygame.Surface((32, 32), pygame.SRCALPHA)],
-            'boost': boost_frames or []
+            'move': self._scale_frames(move_frames),
+            'boost': self._scale_frames(boost_frames) if boost_frames else []
         }
         self.frame_index = 0
         self.current_anim = 'move'
         # säilytä aktiivinen kuva
         self.image = self.animations[self.current_anim][self.frame_index]
         self.rect = self.image.get_rect(center=(x, y))
+        # rect on nyt luotu skaalatusta kuvasta, ei tarvita lisäskaalausta
         # Käytetään liikkeessä tarkempaa kelluvaa sijaintia
         self.pos = pygame.math.Vector2(x, y)
         self.vel = pygame.math.Vector2(0, 0)
@@ -39,6 +44,20 @@ class Player(pygame.sprite.Sprite):
         self.turnLeft = False
         self.turnRight = False
 
+    def _scale_frames(self, frames):
+        """Palauttaa listan skaalatuista pygame.Surface-kehyksistä.
+
+        Huom: jos `frames` on None tai tyhjä lista, palautetaan tyhjä lista.
+        """
+        if not frames:
+            return []
+        scaled = []
+        for f in frames:
+            w = max(1, int(f.get_width() * self.scale_factor))
+            h = max(1, int(f.get_height() * self.scale_factor))
+            scaled.append(pygame.transform.scale(f, (w, h)))
+        return scaled
+
     def update(self, dt):
         """Päivitä animaatioaika (dt millisekunteina)."""
         # valitse aktiivinen animaatio (boost kun w painetaan ja boost-kehyksiä löytyy)
@@ -46,6 +65,7 @@ class Player(pygame.sprite.Sprite):
         self.moveUp = keys[pygame.K_w]
         self.moveDown = keys[pygame.K_s]
         
+        # nämä pitää olla käänteiset, left on k_d ja right on k_a
         self.turnLeft = keys[pygame.K_d]
         self.turnRight = keys[pygame.K_a]
 
