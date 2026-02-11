@@ -109,6 +109,11 @@ player_scale_multiplier = 10
 player_scale_factor = 0.5  # Skaalaa pelaaja puoleen kokoon
 player = Player(player_scale_factor, frames, player_start_x, player_start_y, boost_frames=boost_frames)
 
+# Pelaajan elämät
+lives = 3
+enemy_hit_cooldown = 0
+enemy_hit_cooldown_duration = 1000  # 1 sekunti (millisekuntia)
+
 # Kello frameratea ja animaatiota varten
 clock = pygame.time.Clock()
 
@@ -161,6 +166,22 @@ while run:
                     pistejarjestelma.lisaa_piste(1)  # Lisää pisteet vihollisen tuhosta
                 break  # Siirry seuraavaan ammuskseen kun tämä osui
 
+    # Tarkista osumat vihollisten ja pelaajan välillä
+    if enemy_hit_cooldown <= 0:
+        for enemy in enemies:
+            if player.rect.colliderect(enemy.rect):
+                lives -= 1
+                enemy_hit_cooldown = enemy_hit_cooldown_duration
+                break  # Vain yksi osumistapahtuma per cooldown
+
+    # Päivitä cooldown
+    if enemy_hit_cooldown > 0:
+        enemy_hit_cooldown -= dt
+
+    # Tarkista pelin loppu
+    if lives <= 0:
+        run = False
+
     for e in enemies:
         e.draw(screen, camera_x, camera_y)
 
@@ -170,6 +191,11 @@ while run:
 
     # Näytä pisteet vasemmassa yläkulmassa.
     pistejarjestelma.show_score(10, 10, pygame.font.SysFont('Arial', 24), screen)
+
+    # Näytä elämät oikeassa yläkulmassa
+    font = pygame.font.SysFont('Arial', 24)
+    lives_text = font.render(f"Elämät: {lives}", True, (255, 255, 255))
+    screen.blit(lives_text, (X - 200, 10))
 
     # Päivitä näyttö
     pygame.display.update()
