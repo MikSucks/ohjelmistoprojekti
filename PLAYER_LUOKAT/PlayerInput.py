@@ -1,5 +1,5 @@
 import pygame
-
+# moi
 class PlayerInput:
     def __init__(self):
         self.moveUp = False
