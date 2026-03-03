@@ -126,6 +126,17 @@ class Enemy(pygame.sprite.Sprite):
             new = curr + (max_change if diff > 0 else -max_change)
         self.display_angle = new
 
+    def maybe_shoot(self, dt_ms: int, containers: dict | None = None, player=None):
+        """Oletustoteutus vihollisen ampumiskutsulle.
+
+        Monet pelin vihollisluokat voivat tarjota `maybe_shoot`-metodin. Tämän
+        perusluokan oletus on ei tehdä mitään — näin kutsuja voi tehdä ilman
+        erillistä hasattr-tarkistusta.
+        - `containers` on sanakirja, esim. {'bullets': list, 'muzzles': list}
+        - `player` voidaan välittää tähtäystarkoituksiin
+        """
+        return None
+
     def draw(self, screen: pygame.Surface, camera_x: int, camera_y: int):
         try:
             ang = float(getattr(self, 'display_angle', 0.0))

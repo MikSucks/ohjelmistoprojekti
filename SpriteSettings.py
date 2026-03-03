@@ -3,10 +3,12 @@ import pygame
 
 
 class SpriteSettings:
-    """Load commonly used enemy sprites into lists for easy assignment to enemies.
+    """Apuluokka vihollisspritesien lataukseen ja ryhmittelyyn.
 
-    Defaults expect the repository structure shown in the project and will
-    load assets for a single ship (default 'Ship2').
+    Tämän luokan tarkoitus on tarjota helppo tapa ladata ja pitää järjestyksessä
+    vihollisten (alusten) kehykset, pakokaasu-animaatiot ja luotikehykset.
+    Luokka ei käynnistä `pygame`-kirjastoa automaattisesti; `pygame.init()` tulee
+    kutsua ennen `load_all()`-metodin käyttöä.
     """
 
     def __init__(self, base_path: str = 'enemy-sprite', ship: str = 'Ship2'):
@@ -22,10 +24,11 @@ class SpriteSettings:
         # We do not auto-initialize pygame here to keep this module pure.
 
     def _load_images_from(self, path: str) -> list:
-        """Return list of Surfaces from a folder or a single-file path.
+        """Palauttaa listan `pygame.Surface`-olioita polusta.
 
-        If `path` is a file, returns a single-element list. If it's a folder,
-        returns all .png files inside (sorted).
+        Jos `path` on tiedosto, palautetaan yhden kuvan lista. Jos se on kansio,
+        palautetaan kaikki kansiossa olevat .png-tiedostot (lajiteltuna).
+        Paluuarvo on tyhjä lista jos polku ei ole olemassa tai kuvia ei voida ladata.
         """
         if not os.path.exists(path):
             return []
@@ -36,7 +39,7 @@ class SpriteSettings:
             except Exception:
                 return []
 
-        # directory: walk immediate descendants and collect pngs
+        # Jos annettu polku on kansio, etsi sen .png-tiedostot
         images = []
         for dirpath, _, files in os.walk(path):
             pngs = sorted(f for f in files if f.lower().endswith('.png'))
@@ -49,13 +52,14 @@ class SpriteSettings:
         return images
 
     def load_all(self):
-        """Load the ship sprite(s), exhaust (turbo/normal) and shot sprites.
+        """Lataa kaikki yleisesti tarvittavat sprite-resurssit.
 
-        Paths used (relative to `base_path`):
-        - PNG_Parts&Spriter_Animation/<Ship>/<Ship>/  (ship frames)
-        - PNG_Parts&Spriter_Animation/<Ship>/Exhaust/Turbo_flight/Exhaust1
-        - PNG_Parts&Spriter_Animation/<Ship>/Exhaust/Normal_flight/Exhaust1
-        - PNG_Animations/Shots/Shot4
+        Metodi yrittää ladata seuraavia ryhmiä suhteessa `self.base`-polkuun:
+        - aluksen kehykset (ship frames)
+        - pakokaasu/afterburner -kehykset (turbo/normal)
+        - luotien kehykset (start/flight/explode)
+
+        Palauttaa sanakirjan, joka sisältää listoja ladatuista kuvista.
         """
         ship_folder = os.path.join(self.base, 'PNG_Parts&Spriter_Animation', self.ship, self.ship)
         self.ship_frames = self._load_images_from(ship_folder)
@@ -73,7 +77,7 @@ class SpriteSettings:
             os.path.join(self.base, 'PNG_Parts&Spriter_Animation', 'Shot4'),
         ]
 
-        # collect shot subfolders into categories: start, flight, explode
+        # Kerää luotikehysten alikansiot kategorioihin: start, flight, explode
         shots = {'start': [], 'flight': [], 'explode': []}
         for shots_folder in candidate_shot_paths:
             if not os.path.isdir(shots_folder):
@@ -90,17 +94,18 @@ class SpriteSettings:
                         continue
                 if not imgs:
                     continue
+                # Luokan nimi kertoo mihin kategoriaan kuvat kuuluvat
                 if 'start' in name or 'shotstart' in name:
                     shots['start'].extend(imgs)
                 elif 'exp' in name or 'expl' in name:
                     shots['explode'].extend(imgs)
                 else:
-                    # default to flight/asset frames
+                    # Oletuksena käsitellään kuvaa lentovaiheen kehyksenä
                     shots['flight'].extend(imgs)
 
         self.shot_frames = shots
 
-        # If a specific Shot4 flight asset exists in the parts folder, prefer it
+        # Jos tietyt Shot4-lentokehykset löytyvät osakansiosta, käytä niitä ensisijaisesti
         preferred = os.path.join(self.base, 'PNG_Parts&Spriter_Animation', 'Shots', 'Shot4', 'shot4', 'shot4_asset', '000_shot4_asset_0.png')
         if os.path.isfile(preferred):
             try:
