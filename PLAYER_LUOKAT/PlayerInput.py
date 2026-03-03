@@ -18,9 +18,9 @@ class PlayerInput:
         self.moveDown = keys[pygame.K_s]
         self.turnLeft = keys[pygame.K_d]
         self.turnRight = keys[pygame.K_a]
-        # Asetetaan shoot1 ja shoot2 erillisinä nappeina: P = Shot1, L = Shot2
-        self.shoot1 = keys[pygame.K_p]
-        self.shoot2 = keys[pygame.K_l]
+            # Asetetaan shoot1 ja shoot2 erillisinä nappeina: shoot1 = L, shoot2 = P
+        self.shoot1 = keys[pygame.K_l]
+        self.shoot2 = keys[pygame.K_p]
         # säilytä shoot alias vanhalle koodille (ottaa arvon shoot1)
         self.shoot = self.shoot1
         self.hit = keys[pygame.K_h]

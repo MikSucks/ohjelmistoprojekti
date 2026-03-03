@@ -6,9 +6,12 @@ Missä ammusten tiedot määritellään:
     alla tässä tiedostossa. Muokkaa sitä muuttaaksesi ammusten nopeutta,
     cooldownia (ms).
 
-P/Näppäin-kartoitus (käytetty konventio tässä projektissa):
-- P (normaali ase, sininen) käyttää presetiä `Shot2` — oletusasetus ampuu
+Miten pelaajan ammusten spawn-logiikka toimii:
+- `PlayerWeapons.shoot()` on yleinen kahden-luodin pikalaukaisu, joka käyttää globaalisti määritettyä `shoot_cooldown`-arvoa.
+- `PlayerWeapons.shoot_with(kind)` käyttää `Ammus.PRESETS[kind]`-presettiä ja kunnioittaa presetin asetuksia kuten `count`, `rps` (rounds/sec) ja `cooldown`.
 
+
+- P (normaali ase, sininen) käyttää presetiä `Shot2` — oletusasetus ampuu kaksi ammusta nopealla tahdilla, ilman per-preset cooldownia (vain globaalin cooldownin rajoittama).
 - L (spesiaali / teho-ammus, vihreä) käyttää presetiä `Shot1` — voimakkaampi,
     hitaampi ja sillä on preset-kohtainen cooldown (esim. 3000 ms).
 
@@ -38,21 +41,21 @@ class Ammus(pygame.sprite.Sprite):
     PRESETS = {
         # Shot2: normaali ase (P) — tupla-ammus
         'Shot2': {
-            'speed': 800.0,
+            'speed': 1000.0,
             'damage': 1,
             'size': 5,        # integer 1..10 -> scale multiplier
-            'offset': (20, 6),
+            'offset': (40, 6), # spawn offset (forward, side) in pixels at scale_factor=1; scaled by PlayerWeapons
             'count': 2,       # P ampuu kaksi ammusta
             'cooldown': 0,    # ms additional per-preset cooldown (0 = none)
             'rps': 6.0,       # rounds per second for this preset (P = rapid)
         },
         # Shot1: teho-ammus (L) — hitaampi mutta voimakkaampi
         'Shot1': {
-            'speed': 450.0,
+            'speed': 300.0,
             'damage': 4,
-            'size': 6,
-            'offset': (20, -12),
-            'count': 1,       # L ampuu yhden ammuksen
+            'size': 5,
+            'offset': (30, 2),
+            'count': 2,       # L ampuu yhden ammuksen
             'cooldown': 3000,  # 3000 ms = 3 s viive käytön jälkeen
             'rps': 0.3333333,  # ~0.333 rounds/sec = 1 shot per 3s (matches cooldown)
         }

@@ -155,6 +155,7 @@ class Player(pygame.sprite.Sprite):
         if self.input.turnRight:
             self.angle -= self.turn_speed * dt_s
         if self.input.moveUp:
+            # thrust direction: use same angle convention as drawing
             rad = math.radians(self.angle)
             thrust = pygame.math.Vector2(math.cos(rad), math.sin(rad)) * self.accel * dt_s
             self.vel += thrust

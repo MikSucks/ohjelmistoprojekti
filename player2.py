@@ -29,6 +29,12 @@ class Player2(pygame.sprite.Sprite):
 
         self.attack_offset_distance = 3
 
+
+
+
+
+
+
         # löydä projektin juuri
         def find_project_root(start_path):
             d = os.path.dirname(os.path.abspath(start_path))
@@ -41,6 +47,11 @@ class Player2(pygame.sprite.Sprite):
                 d = parent
 
         project_root = find_project_root(__file__)
+
+
+
+
+
 
         # helper: etsi ensimmäinen olemassa oleva kansio
         def first_exist(*paths):
@@ -69,6 +80,12 @@ class Player2(pygame.sprite.Sprite):
                     candidates.append(os.path.join(alukset_root, cand))
 
         base_folder = first_exist(*candidates)
+
+
+
+
+
+
 
         # Latausapufunktio: etsii ensin alakansion (base_folder/subpath), jos sitä
         # ei ole, yrittää löytää tiedostoja base_folderista prefiksillä
@@ -230,6 +247,10 @@ class Player2(pygame.sprite.Sprite):
 
         # (No debug output) initialization complete
 
+
+
+
+
     def update(self, dt):
         self.input.update()
         self.update_destroyed_animation(dt)
@@ -239,12 +260,20 @@ class Player2(pygame.sprite.Sprite):
         self.handle_animation(dt)
         self.handle_movement(dt)
 
+
+
+
+
     def update_destroyed_animation(self, dt):
         if self.is_destroyed and self.destroyed_frames:
             self.destroyed_anim_timer += dt
             frame_count = len(self.destroyed_frames)
             if frame_count > 0:
                 self.destroyed_frame_index = min(int(self.destroyed_anim_timer / self.destroyed_anim_speed), frame_count - 1)
+
+
+
+
 
     def update_hit_animation(self, dt):
         if self.hit_anim_timer > 0:
@@ -254,16 +283,25 @@ class Player2(pygame.sprite.Sprite):
         if self.input.hit:
             self.trigger_hit_animation()
 
+
+
+
+
+
+
+
+
     def handle_attack_animation(self, dt):
-        # Tukee kahta ampumiskomentoa: P => Shot1, L => Shot2
+        # Tukee kahta ampumiskomentoa: P => normaali (Shot2), L => teho (Shot1)
+        # Note: `PlayerInput`: shoot2 == P, shoot1 == L
         if self.input.shoot1 or self.input.shoot2:
             # Determine which preset would be used for this input (mapping):
-            # input.shoot1 (P) -> preset 'Shot2'
-            # input.shoot2 (L) -> preset 'Shot1'
+            # input.shoot2 (P) -> preset 'Shot2'
+            # input.shoot1 (L) -> preset 'Shot1'
             preset_used = None
-            if self.input.shoot1:
+            if self.input.shoot2:
                 preset_used = 'Shot2'
-            elif self.input.shoot2:
+            elif self.input.shoot1:
                 preset_used = 'Shot1'
 
             # If the preset is on cooldown, suppress its attack frames and
@@ -274,10 +312,11 @@ class Player2(pygame.sprite.Sprite):
             except Exception:
                 preset_on_cooldown = False
 
-            if self.input.shoot1 and (not preset_on_cooldown) and self.shot1_frames:
-                self.current_attack_frames = list(self.shot1_frames)
-            elif self.input.shoot2 and (not preset_on_cooldown) and self.shot2_frames:
+            # Select appropriate attack frames for the pressed key (if not on cooldown)
+            if self.input.shoot2 and (not preset_on_cooldown) and self.shot2_frames:
                 self.current_attack_frames = list(self.shot2_frames)
+            elif self.input.shoot1 and (not preset_on_cooldown) and self.shot1_frames:
+                self.current_attack_frames = list(self.shot1_frames)
             else:
                 self.current_attack_frames = list(self.attack_frames)
 
@@ -288,17 +327,18 @@ class Player2(pygame.sprite.Sprite):
                     self.attack_frame_index = (self.attack_frame_index + 1) % len(self.current_attack_frames)
 
                 # track last shot type quietly
-                self._last_shot_type = 'shot1' if self.input.shoot1 else ('shot2' if self.input.shoot2 else 'attack')
+                self._last_shot_type = 'shot2' if self.input.shoot2 else ('shot1' if self.input.shoot1 else 'attack')
 
-            # Valitse ammustyyppi näppäimen mukaan ja ammu oikealla ammo-kuvalla
-            # Ammutaan vain jos preset ei ole cooldown-tilassa.
-            if self.input.shoot1:
-                img = self.shot1_ammo
-                if not self.weapons.preset_timers.get('Shot2', 0):
-                    self.weapons.shoot_with(self.pos, self.angle, img, preset_kind='Shot2')
-            elif self.input.shoot2:
+            # Choose ammo type by key and shoot if preset not on cooldown
+            if self.input.shoot2:
                 img = self.shot2_ammo
+                if not self.weapons.preset_timers.get('Shot2', 0):
+                    # P -> Shot2 (normi)
+                    self.weapons.shoot_with(self.pos, self.angle, img, preset_kind='Shot2')
+            elif self.input.shoot1:
+                img = self.shot1_ammo
                 if not self.weapons.preset_timers.get('Shot1', 0):
+                    # L -> Shot1 (teho)
                     self.weapons.shoot_with(self.pos, self.angle, img, preset_kind='Shot1')
         else:
             # Palauta oletus attack-kehykset ja nollaa animaatio
@@ -333,6 +373,12 @@ class Player2(pygame.sprite.Sprite):
                 self.frame_index = (self.frame_index + 1) % len(frames)
             self.image = frames[self.frame_index]
 
+
+
+
+
+
+
     def handle_movement(self, dt):
         dt_s = dt / 1000.0
         if self.input.turnLeft:
@@ -356,6 +402,15 @@ class Player2(pygame.sprite.Sprite):
                     self.vel.scale_to_length(new_speed)
         self.pos += self.vel * dt_s
         self.rect.center = (int(self.pos.x), int(self.pos.y))
+
+
+
+
+
+
+
+
+
 
     def move(self, dx, dy, world_w, world_h):
         """Siirtometodi, yhteensopiva vanhan `Player.move`-metodin kanssa.
@@ -397,6 +452,13 @@ class Player2(pygame.sprite.Sprite):
             screen.blit(bullet.image, (bullet.rect.x - cam_x, bullet.rect.y - cam_y))
 
         # attack overlay removed — attack frames are now applied to `self.image`
+
+
+
+
+
+
+
 
     def trigger_hit_animation(self):
         self.hit_anim_timer = self.hit_anim_duration
