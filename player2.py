@@ -151,7 +151,15 @@ class Player2(pygame.sprite.Sprite):
         if not self.move_frames:
             self.move_frames = load_frames_from('Fly1')
 
+        # Idle frames: try 'Idle' folder first, otherwise use first move frame as idle
+        self.idle_frames = load_frames_from('Idle') or []
+        if not self.idle_frames and self.move_frames:
+            # use single-frame idle from first move frame
+            self.idle_frames = [self.move_frames[0]]
+
         self.hurt_frames = load_frames_from('Damage') or load_frames_from('Hurt')
+        # Hurt animation frame speed (ms per frame). Increased default to slow it down.
+        self.hurt_frame_speed = 120
         self.destroyed_frames = load_frames_from('Destroyed')
 
         # Shot - kehykset ja ammo-kuvat
@@ -210,6 +218,7 @@ class Player2(pygame.sprite.Sprite):
 
         # Aseta alustuskuva ja anim-tila
         self.animaatio = {
+            'idle': self.idle_frames or [pygame.Surface((32,32), pygame.SRCALPHA)],
             'move': self.move_frames or [pygame.Surface((32,32), pygame.SRCALPHA)],
             'boost': self.boost_frames or []
         }
@@ -241,6 +250,10 @@ class Player2(pygame.sprite.Sprite):
         self.hit_anim_duration = 200
         # Hurt-flag: näyttää Damage/Hurt-overlay kun True
         self.hurt_flag = False
+
+
+        # Debug: näytä spriten ja rectin keskikohdat + offset (aseta False poistaaksesi)
+        self.show_center_debug = False
 
         # attack frames (jos niitä ei löytynyt aiemmin, varmistetaan kentät)
         self.attack_frames = getattr(self, 'attack_frames', [])
@@ -289,11 +302,28 @@ class Player2(pygame.sprite.Sprite):
 
 
     def update_hit_animation(self, dt):
+        # Decrease hit timer; ensure hurt_flag is cleared and animation
+        # state is restored when the hit animation completes.
         if self.hit_anim_timer > 0:
             self.hit_anim_timer -= dt
-            if self.hit_anim_timer < 0:
+            if self.hit_anim_timer <= 0:
+                # timer expired: clear flag and restore appropriate anim
                 self.hit_anim_timer = 0
                 self.hurt_flag = False
+                # Restore to idle/move/boost depending on current input
+                if self.input.moveUp:
+                    new_anim = 'boost' if self.animaatio.get('boost') else 'move'
+                else:
+                    new_anim = 'idle'
+                self.current_anim = new_anim
+                self.frame_index = 0
+                self.anim_timer = 0
+        else:
+            # Safety: if timer is zero but flag somehow stayed True, clear it
+            if getattr(self, 'hurt_flag', False):
+                self.hurt_flag = False
+
+        # Allow input-triggered hit animation to restart the timer/flag
         if self.input.hit:
             self.trigger_hit_animation()
 
@@ -365,27 +395,46 @@ class Player2(pygame.sprite.Sprite):
         # Jos ammutaan, käytä attack-kehyksiä (Shot1/Shot2) pääanimaationa
         if (self.input.shoot1 or self.input.shoot2) and self.current_attack_frames:
             frames = self.current_attack_frames
+            frame_count = len(frames)
+            if frame_count == 0:
+                return
             self.anim_timer += dt
             if self.anim_timer >= self.anim_speed:
                 self.anim_timer -= self.anim_speed
-                self.frame_index = (self.frame_index + 1) % len(frames)
-            # varmistetaan indeksi
-            idx = max(0, min(self.frame_index, len(frames) - 1))
-            self.image = frames[idx]
+                # keep frame_index within valid range
+                self.frame_index = (self.frame_index + 1) % frame_count
+            # safe access
+            idx = max(0, min(self.frame_index, frame_count - 1))
+            try:
+                self.image = frames[idx]
+            except Exception:
+                # fallback to first frame
+                self.image = frames[0]
             return
 
-        new_anim = 'boost' if (self.input.moveUp and self.animaatio.get('boost')) else 'move'
+        # choose idle vs move vs boost
+        if self.input.moveUp:
+            new_anim = 'boost' if self.animaatio.get('boost') else 'move'
+        else:
+            new_anim = 'idle'
         if new_anim != self.current_anim:
             self.current_anim = new_anim
             self.frame_index = 0
             self.anim_timer = 0
         frames = self.animaatio.get(self.current_anim, [])
-        if frames:
+        frame_count = len(frames)
+        if frame_count:
             self.anim_timer += dt
             if self.anim_timer >= self.anim_speed:
                 self.anim_timer -= self.anim_speed
-                self.frame_index = (self.frame_index + 1) % len(frames)
-            self.image = frames[self.frame_index]
+                # ensure frame_index always valid even if frames list changes
+                self.frame_index = (self.frame_index + 1) % frame_count
+            # clamp and set image safely
+            if 0 <= self.frame_index < frame_count:
+                self.image = frames[self.frame_index]
+            else:
+                self.frame_index = 0
+                self.image = frames[0]
 
 
 
@@ -458,36 +507,77 @@ class Player2(pygame.sprite.Sprite):
             screen.blit(destroyed_sprite, destroyed_rect.topleft)
             return
 
-        rotated = pygame.transform.rotate(self.image, -self.angle)
-        rot_rect = rotated.get_rect(center=(self.pos.x - cam_x, self.pos.y - cam_y))
-        screen.blit(rotated, rot_rect.topleft)
+        # Keskitys rectin mukaan
+        base_center = (self.rect.centerx - cam_x, self.rect.centery - cam_y)
 
-        # Piirrä hurt-overlay jos osuma tapahtunut äskettäin
+        # Debug: tulosta rectin top-left ja keskikohta sekä idle/fly sprite-keskikohdat
+        if getattr(self, 'show_center_debug', False):
+            # Raw rect coordinates relative to origin (0,0)
+            rect_topleft = (self.rect.x, self.rect.y)
+            rect_center = (self.rect.centerx, self.rect.centery)
+
+            # Idle first-frame center when placed at rect_center
+            idle_center = None
+            if self.animaatio.get('idle'):
+                idle_img = self.animaatio['idle'][0]
+                idle_rect = idle_img.get_rect(center=rect_center)
+                idle_center = idle_rect.center
+
+            # Fly/move first-frame center when placed at rect_center
+            fly_center = None
+            move_frames = self.animaatio.get('move') or self.move_frames
+            if move_frames:
+                fly_img = move_frames[0]
+                fly_rect = fly_img.get_rect(center=rect_center)
+                fly_center = fly_rect.center
+
+            # Offsets: sprite_center - rect_center
+            def offset(a, b):
+                if a is None or b is None:
+                    return None
+                return (a[0] - b[0], a[1] - b[1])
+
+            idle_offset = offset(idle_center, rect_center)
+            fly_offset = offset(fly_center, rect_center)
+
+            print(f"[SPRITE DEBUG] rect={rect_topleft} rect_center={rect_center} | idle_center={idle_center} idle_offset={idle_offset} | fly_center={fly_center} fly_offset={fly_offset}")
+
+        # Jos hurt-flag on päällä, piirretään vain hurt-frame overlay
         if getattr(self, 'hurt_flag', False) and getattr(self, 'hurt_frames', None):
             frames = self.hurt_frames
             if frames:
                 frame_count = len(frames)
-                if self.hit_anim_duration > 0 and frame_count > 0:
-                    prog = 1.0 - (self.hit_anim_timer / float(self.hit_anim_duration))
-                    idx = int(prog * frame_count)
+                if frame_count > 0:
+                    elapsed = self.hit_anim_duration - self.hit_anim_timer
+                    idx = int(elapsed / max(1, getattr(self, 'hurt_frame_speed', 40)))
                     idx = max(0, min(frame_count - 1, idx))
                     dmg = frames[idx]
                     dmg_rot = pygame.transform.rotate(dmg, -self.angle)
-                    dmg_rect = dmg_rot.get_rect(center=(self.pos.x - cam_x, self.pos.y - cam_y))
+                    dmg_rect = dmg_rot.get_rect(center=base_center)
                     screen.blit(dmg_rot, dmg_rect.topleft)
+        else:
+            rotated = pygame.transform.rotate(self.image, -self.angle)
+            rot_rect = rotated.get_rect(center=base_center)
+            screen.blit(rotated, rot_rect.topleft)
 
         for bullet in self.weapons.bullets:
             screen.blit(bullet.image, (bullet.rect.x - cam_x, bullet.rect.y - cam_y))
 
         # attack overlay removed — attack frames are now applied to `self.image`
-
-
-
-
-
-
-
-
     def trigger_hit_animation(self):
-        self.hit_anim_timer = self.hit_anim_duration
+        # Start/restart hit animation and remember current anim state.
+        # Compute duration from hurt frames if available so the animation
+        # timing scales with number of frames and the configured frame speed.
+        total_duration = getattr(self, 'hit_anim_duration', 200)
+        if getattr(self, 'hurt_frames', None):
+            try:
+                total_duration = len(self.hurt_frames) * int(self.hurt_frame_speed)
+            except Exception:
+                total_duration = getattr(self, 'hit_anim_duration', 200)
+        self.hit_anim_duration = total_duration
+        self.hit_anim_timer = total_duration
         self.hurt_flag = True
+        # Save the current animation state so it can be restored if needed
+        self._saved_anim = getattr(self, 'current_anim', 'move')
+        self._saved_frame_index = getattr(self, 'frame_index', 0)
+        self._saved_anim_timer = getattr(self, 'anim_timer', 0)
