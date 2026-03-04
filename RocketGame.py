@@ -208,6 +208,8 @@ enemies = []
 current_wave = 1
 MAX_WAVE = 4
 wave_cleared = False
+BOSS_CLEAR_MENU_DELAY_MS = 1800
+boss_clear_menu_delay_remaining = None
 
 
 def clear_round_state():
@@ -222,11 +224,12 @@ def clear_round_state():
 
 # pelin reset
 def reset_game():
-    global current_wave, wave_cleared, lives, enemy_hit_cooldown,pistejarjestelma
+    global current_wave, wave_cleared, lives, enemy_hit_cooldown,pistejarjestelma, boss_clear_menu_delay_remaining
 
     # wave reset
     current_wave = 1
     wave_cleared = False
+    boss_clear_menu_delay_remaining = None
 
     # clear enemies + enemy bullets + muzzle effects+ collisions
     clear_round_state()
@@ -692,6 +695,7 @@ while run:
 
     # Wave progression system
     if len(enemies) == 0 and current_wave < MAX_WAVE:
+        boss_clear_menu_delay_remaining = None
         current_wave += 1
         spawn_wave(current_wave)
         pygame.event.clear()
@@ -699,24 +703,34 @@ while run:
 
     # Show next level menu only after boss wave is cleared
     if len(enemies) == 0 and current_wave >= MAX_WAVE:
-        next_level_screen = NextLevel(
-            current_level=current_wave,
-            max_level=MAX_WAVE,
-            display_current_level=1,
-            display_next_level=2,
-        )
-        next_level_action = next_level_screen.run()
+        if boss_clear_menu_delay_remaining is None:
+            boss_clear_menu_delay_remaining = BOSS_CLEAR_MENU_DELAY_MS
+        else:
+            boss_clear_menu_delay_remaining -= dt
 
-        if isinstance(next_level_action, int):
-            current_wave = next_level_action
-            spawn_wave(current_wave)
-            pygame.event.clear()
-        elif next_level_action == "settings":
+        if boss_clear_menu_delay_remaining > 0:
+            # Keep rendering game frames so boss explosion animation can play first
             pass
-        elif next_level_action in ("quit", "game_completed"):
-            run = False
+        else:
+            boss_clear_menu_delay_remaining = None
+            next_level_screen = NextLevel(
+                current_level=current_wave,
+                max_level=MAX_WAVE,
+                display_current_level=1,
+                display_next_level=2,
+            )
+            next_level_action = next_level_screen.run()
 
-        continue
+            if isinstance(next_level_action, int):
+                current_wave = next_level_action
+                spawn_wave(current_wave)
+                pygame.event.clear()
+            elif next_level_action == "settings":
+                pass
+            elif next_level_action in ("quit", "game_completed"):
+                run = False
+
+            continue
 
     # Tarkista osumat vihollisten ja pelaajan välillä
     if enemy_hit_cooldown <= 0:
