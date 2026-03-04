@@ -124,7 +124,24 @@ class MainMenu:
             elif action == "settings":
                 print("Asetukset avautuvat...")
                 settings_menu_main()  # Palaa kun käyttäjä haluaa takaisin
-                # Jatkaa päävalikkoon automaattisesti
+                # Päivitä resoluutio heti asetuksista palatessa
+                try:
+                    import json, os
+                    rocketgame_path = os.path.join(os.path.dirname(__file__), '..', 'RocketGame.py')
+                    settings_path = os.path.join(os.path.dirname(__file__), '..', 'settings.json')
+                    if os.path.exists(settings_path):
+                        with open(settings_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            res = data.get('resolution')
+                            if res:
+                                # Importoi RocketGame ja kutsu change_resolution
+                                import importlib.util
+                                spec = importlib.util.spec_from_file_location('RocketGame', rocketgame_path)
+                                rg = importlib.util.module_from_spec(spec)
+                                spec.loader.exec_module(rg)
+                                rg.change_resolution(res)
+                except Exception as e:
+                    print('Resoluutio ei päivittynyt lennossa:', e)
             elif action == "quit":
                 print("Peli suljetaan...")
                 return "quit"

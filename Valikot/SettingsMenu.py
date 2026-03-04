@@ -62,8 +62,7 @@ def main():
     settings._theme.widget_font_color = BLACK
     settings._theme.widget_alignment = pm.locals.ALIGN_LEFT
 
-    # Text input that takes in the username
-    settings.add.text_input(title="User Name : ", textinput_id="username")
+    # settings.add.text_input(title="User Name : ", textinput_id="username")  # Kommentoitu pois, ei tarvita 2D-pelissä
 
     # 2 different Drop-downs to select the graphics level and the resolution level
     settings.add.dropselect(title="Graphics Level", items=graphics,
@@ -75,7 +74,7 @@ def main():
 
     # Toggle switches to turn on/off the music and sound
     settings.add.toggle_switch(
-        title="Muisc", default=True, toggleswitch_id="music")
+        title="Music", default=True, toggleswitch_id="music")
     settings.add.toggle_switch(
         title="Sounds", default=False, toggleswitch_id="sound")
 
@@ -83,14 +82,11 @@ def main():
     settings.add.selector(title="Difficulty\t", items=difficulty,
                           selector_id="difficulty", default=0)
 
-    # Range slider that lets to choose a value using a slider
-    settings.add.range_slider(title="FOV", default=60, range_values=(
-        50, 100), increment=1, value_format=lambda x: str(int(x)), rangeslider_id="fov")
+    # settings.add.range_slider(title="FOV", default=60, range_values=(
+    #     50, 100), increment=1, value_format=lambda x: str(int(x)), rangeslider_id="fov")  # Kommentoitu pois, ei tarvita 2D-pelissä
 
-    # Fancy selector (style added to the default selector) to choose between 
-    #first person and third person perspectives
-    settings.add.selector(title="Perspective", items=perspectives,
-                          default=0, style="fancy", selector_id="perspective")
+    # settings.add.selector(title="Perspective", items=perspectives,
+    #                       default=0, style="fancy", selector_id="perspective")  # Kommentoitu pois, ei tarvita 2D-pelissä
 
     # clock that displays the current date and time
     settings.add.clock(clock_format="%d-%m-%y %H:%M:%S",
