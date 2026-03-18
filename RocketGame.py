@@ -59,6 +59,8 @@ HITBOX_SIZE_ENEMY = (48, 48)
 HITBOX_SIZE_BOSS = (140, 140)
 BOSS_EXPLOSION_HOLD_MS = 900
 PLAYER_DEATH_HOLD_MS = 1100
+PLAYER_DEATH_EXPLOSION_FPS = 12
+PLAYER_DESTROYED_FRAME_MS = 95
 
 
 def apply_hitbox(obj, size=None):
@@ -233,6 +235,8 @@ class Game:
         player_scale_factor = 1
 
         self.player = Player2(player_ship, player_scale_factor, player_start_x, player_start_y, max_health=5)
+        if hasattr(self.player, 'destroyed_anim_speed'):
+            self.player.destroyed_anim_speed = PLAYER_DESTROYED_FRAME_MS
 
         apply_hitbox(self.player, HITBOX_SIZE_PLAYER)
         self.lives = int(getattr(self.player, 'health', getattr(self.player, 'max_health', 5)))
@@ -251,6 +255,14 @@ class Game:
         self.muzzles.clear()
         self.collisions.clear()
         self.player.health = getattr(self.player, 'max_health', 5)
+        if hasattr(self.player, 'is_destroyed'):
+            self.player.is_destroyed = False
+        if hasattr(self.player, 'destroyed_anim_timer'):
+            self.player.destroyed_anim_timer = 0
+        if hasattr(self.player, 'destroyed_frame_index'):
+            self.player.destroyed_frame_index = 0
+        if hasattr(self.player, 'destroyed_angle'):
+            self.player.destroyed_angle = float(getattr(self.player, 'angle', 0.0))
         self.lives = self.player.health
         self.spawn_wave(self.current_wave)
         self.pistejarjestelma = Points()
@@ -434,9 +446,35 @@ class Game:
             self.leaderboard.add_score("", self.pistejarjestelma.hae_pisteet())
             self.leaderboard.save_to_file(os.path.join(self.base_path, 'leaderboard.json'))
             print(self.leaderboard.get_player_scores())
-            self.player_death_menu_delay_remaining = PLAYER_DEATH_HOLD_MS
+
+            if hasattr(self.player, 'is_destroyed'):
+                self.player.is_destroyed = True
+            if hasattr(self.player, 'destroyed_anim_timer'):
+                self.player.destroyed_anim_timer = 0
+            if hasattr(self.player, 'destroyed_frame_index'):
+                self.player.destroyed_frame_index = 0
+            if hasattr(self.player, 'destroyed_angle'):
+                self.player.destroyed_angle = float(getattr(self.player, 'angle', 0.0))
+            if hasattr(self.player, 'vel'):
+                self.player.vel = pygame.Vector2(0, 0)
+
+            # Keep Game Over delay long enough for the slower destroyed + explosion animations.
+            destroyed_count = len(getattr(self.player, 'destroyed_frames', []) or getattr(self.player, 'destroyed_sprites', []))
+            destroyed_speed_ms = int(getattr(self.player, 'destroyed_anim_speed', PLAYER_DESTROYED_FRAME_MS))
+            destroyed_total_ms = destroyed_count * max(1, destroyed_speed_ms)
+            self.player_death_menu_delay_remaining = max(
+                PLAYER_DEATH_HOLD_MS,
+                destroyed_total_ms + 180,
+            )
+
             try:
-                self.explosion_manager.spawn_player(self.player.rect.center, fps=24)
+                print(
+                    f"[DEATH DEBUG] destroyed_frames={destroyed_count}, "
+                    f"destroyed_frame_ms={destroyed_speed_ms}, "
+                    f"player_explosion_frames=0, "
+                    f"player_explosion_fps=0, "
+                    f"hold_ms={self.player_death_menu_delay_remaining}"
+                )
             except Exception:
                 pass
 
