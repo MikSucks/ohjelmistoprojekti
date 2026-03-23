@@ -185,9 +185,16 @@ def main():
     physics_menu._theme.widget_alignment = pm.locals.ALIGN_LEFT
 
     done = False
+    selected_action = "return"
 
     def exit_settings():
-        nonlocal done
+        nonlocal done, selected_action
+        selected_action = "return"
+        done = True
+
+    def start_hazard_test_level():
+        nonlocal done, selected_action
+        selected_action = "start_test_level"
         done = True
 
     def print_general_settings():
@@ -199,6 +206,7 @@ def main():
     # Main settings hub (no scrolling needed)
     settings.add.button("General Settings", general_menu)
     settings.add.button("Physics Settings", physics_menu)
+    settings.add.button("Start Hazard Test Level", start_hazard_test_level)
     settings.add.button("Return To Main Menu", exit_settings)
 
     # General settings page
@@ -323,7 +331,7 @@ def main():
 
     while not done:
         settings.mainloop(screen, bgfun=draw_translucent_bg, disable_loop=True)
-    return
+    return selected_action
 
 
 def _fallback_settings_screen():
