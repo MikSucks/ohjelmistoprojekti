@@ -1,8 +1,8 @@
 """
-Physics/animation.py - Physics-based animation for oscillations
+Physics/animation.py - Fysiikkapohjainen animointi värähtelyille
 
-Provides DampedOscillator for collision bounces and other physics-driven animations.
-Uses exponential damping + sinusoidal oscillation for natural-looking motion.
+Tarjoaa DampedOscillator-luokan törmäyksien jälkeiseen pomppimiseen ja muihin fysiikkaohjattuihin animaatioihin.
+Käyttää eksponentiaalista vaimennusta ja sinimuotoista värähtelyä luonnollisen liikkeen aikaansaamiseksi.
 """
 
 import pygame
@@ -11,38 +11,38 @@ import math
 
 class DampedOscillator:
     """
-    Damped harmonic oscillator for physics-based animations.
+    Vaimennettu harmoninen värähtelijä fysiikkapohjaisiin animaatioihin.
     
-    Models bounces and vibrations as:
-        position = base + initial_displacement * exp(-damping*t/T) * cos(omega*t)
+    Mallintaa pomppuja ja värinää kaavalla:
+    $$position = base + initial\_displacement \cdot e^{-\frac{damping \cdot t}{T}} \cdot \cos(\omega \cdot t)$$
     
-    This creates natural-looking physics: initial bounce that gradually settles.
-    Used to replace collision_bounce_* logic from Enemy class.
+    Tämä luo luonnollisen tuntuisen fysiikan: alkuperäinen pomppu, joka asettuu vähitellen.
+    Käytetään korvaamaan Enemy-luokan collision_bounce_*-logiikka.
     
-    Attributes:
-        base (pygame.Vector2): Rest position to converge toward
-        initial_disp (pygame.Vector2): Starting displacement from base
-        duration (float): Total animation duration in seconds
-        oscillations (float): Number of oscillation cycles during duration
-        damping (float): Damping factor (higher = faster decay)
-        active (bool): Is oscillation currently running?
-        timer (float): Time remaining in this oscillation
+    Attribuutit:
+        base (pygame.Vector2): Lepoasema, jota kohti liike konvergoi
+        initial_disp (pygame.Vector2): Alkuperäinen poikkeama lepoasemasta
+        duration (float): Animaation kokonaiskesto sekunteina
+        oscillations (float): Värähdysjaksojen määrä keston aikana
+        damping (float): Vaimennuskerroin (suurempi = nopeampi vaimennus)
+        active (bool): Onko värähtely parhaillaan käynnissä?
+        timer (float): Tässä värähtelyssä jäljellä oleva aika
     """
     
     def __init__(self, base_pos, initial_displacement, duration=2.0, 
                  oscillations=2.0, damping=2.2):
         """
-        Initialize a damped oscillator.
+        Alusta vaimennettu värähtelijä.
         
         Args:
-            base_pos (tuple|pygame.Vector2): Center/rest position
-            initial_displacement (tuple|pygame.Vector2): Starting offset from base
-            duration (float): Total animation time in seconds (default 2.0)
-            oscillations (float): Number of cycles (default 2.0)
-            damping (float): Exponential decay factor (default 2.2)
+            base_pos (tuple|pygame.Vector2): Keskipiste/lepoasema
+            initial_displacement (tuple|pygame.Vector2): Alkupoikkeama lepoasemasta
+            duration (float): Animaation kokonaisaika sekunteina (oletus 2.0)
+            oscillations (float): Jaksojen määrä (oletus 2.0)
+            damping (float): Eksponentiaalinen vaimennuskerroin (oletus 2.2)
         
-        Example:
-            # Bounce an enemy 30 pixels for 1 second with 2 oscillations
+        Esimerkki:
+            # Pomputa vihollista 30 pikseliä 1 sekunnin ajan kahdella värähdyksellä
             osc = DampedOscillator((100, 100), (30, 0), duration=1.0, oscillations=2.0)
         """
         self.base = pygame.Vector2(base_pos)
@@ -56,45 +56,45 @@ class DampedOscillator:
     
     def update(self, dt):
         """
-        Update oscillator and return current position.
+        Päivitä värähtelijä ja palauta nykyinen sijainti.
         
-        Position decays exponentially while oscillating sinusoidally.
-        When timer expires, oscillator becomes inactive and returns base position.
+        Sijainti vaimenee eksponentiaalisesti samalla kun se värähtelee sinimuotoisesti.
+        Kun ajastin kuluu loppuun, värähtelijä muuttuu inaktiiviseksi ja palauttaa lepoaseman.
         
         Args:
-            dt (float): Delta time in seconds
+            dt (float): Delta-aika sekunteina
         
         Returns:
-            pygame.Vector2: Current position in this frame
+            pygame.Vector2: Nykyinen sijainti tässä framessa
         """
         self.timer -= dt
         
-        # Animation complete
+        # Animaatio valmis
         if self.timer <= 0:
             self.active = False
             return self.base
         
-        # Calculate elapsed time
+        # Laske kulunut aika
         elapsed = self.duration - self.timer
         T = self.duration
         
-        # Oscillation frequency: omega = 2*pi * (oscillations / duration)
+        # Värähtelytaajuus: omega = 2*pi * (värähdykset / kesto)
         omega = 2.0 * math.pi * (self.oscillations / T)
         
-        # Exponential envelope: e^(-damping * t / T)
-        # Decays to ~0.1 at t=T with damping=2.2
+        # Eksponentiaalinen vaippakäyrä: e^(-vaimennus * t / T)
+        # Vaimenee arvoon ~0.1 kun t=T ja vaimennus=2.2
         envelope = math.exp(-(self.damping * elapsed) / T)
         
-        # Cosine oscillation: starts at 1, oscillates
+        # Kosinivärähtely: alkaa arvosta 1, värähtelee
         osc = math.cos(omega * elapsed)
         
-        # Final position: base + initial_disp * envelope * oscillation
+        # Lopullinen sijainti: lepoasema + alkupoikkeama * vaippakäyrä * värähtely
         displacement = self.initial_disp * (envelope * osc)
         
         return self.base + displacement
     
     def is_active(self):
-        """Check if oscillation is still in progress."""
+        """Tarkista, onko värähtely vielä käynnissä."""
         return self.active
     
     def __repr__(self):
@@ -104,28 +104,28 @@ class DampedOscillator:
 
 class BounceAnimator:
     """
-    Manager for multiple simultaneous damped oscillators.
+    Hallintatyökalu useille samanaikaisille vaimennetuille värähtelijöille.
     
-    Useful when an entity needs multiple bounce points (e.g., different body parts).
-    Tracks all active oscillators and provides single update interface.
+    Hyödyllinen, kun entiteetti tarvitsee useita pomppupisteitä (esim. eri ruumiinosat).
+    Seuraa kaikkia aktiivisia värähtelijöitä ja tarjoaa yhden päivitysrajapinnan.
     """
     
     def __init__(self):
-        """Initialize empty bounce animator."""
+        """Alusta tyhjä animaattori."""
         self.oscillators = {}
     
     def add_oscillation(self, name, base_pos, initial_disp, duration=2.0,
-                       oscillations=2.0, damping=2.2):
+                        oscillations=2.0, damping=2.2):
         """
-        Add a new oscillator.
+        Lisää uusi värähtelijä.
         
         Args:
-            name (str): Unique identifier for this oscillation
-            base_pos (tuple|pygame.Vector2): Rest position
-            initial_disp (tuple|pygame.Vector2): Starting offset
-            duration (float): Animation duration
-            oscillations (float): Number of cycles
-            damping (float): Decay rate
+            name (str): Yksilöllinen tunniste tälle värähtelylle
+            base_pos (tuple|pygame.Vector2): Lepoasema
+            initial_disp (tuple|pygame.Vector2): Alkupoikkeama
+            duration (float): Animaation kesto
+            oscillations (float): Jaksojen määrä
+            damping (float): Vaimennusnopeus
         """
         self.oscillators[name] = DampedOscillator(
             base_pos, initial_disp, duration, oscillations, damping
@@ -133,17 +133,17 @@ class BounceAnimator:
     
     def update(self, dt):
         """
-        Update all active oscillators, removing inactive ones.
+        Päivitä kaikki aktiiviset värähtelijät ja poista inaktiiviset.
         
         Args:
-            dt (float): Delta time in seconds
+            dt (float): Delta-aika sekunteina
         
         Returns:
-            dict: {name: current_position} for all active oscillators
+            dict: {nimi: nykyinen_sijainti} kaikille aktiivisille värähtelijöille
         """
         result = {}
         
-        # Update and filter inactive
+        # Päivitä ja suodata pois inaktiiviset
         names_to_remove = []
         for name, osc in self.oscillators.items():
             pos = osc.update(dt)
@@ -152,16 +152,16 @@ class BounceAnimator:
             else:
                 names_to_remove.append(name)
         
-        # Remove inactive
+        # Poista inaktiiviset
         for name in names_to_remove:
             del self.oscillators[name]
         
         return result
     
     def has_active(self):
-        """Check if any oscillators are still active."""
+        """Tarkista, onko mikään värähtelijöistä vielä aktiivinen."""
         return any(osc.is_active() for osc in self.oscillators.values())
     
     def clear(self):
-        """Clear all oscillators."""
+        """Tyhjennä kaikki värähtelijät."""
         self.oscillators.clear()

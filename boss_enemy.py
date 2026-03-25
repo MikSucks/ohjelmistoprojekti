@@ -320,7 +320,7 @@ class BossEnemy(Enemy):
 
         root = Path(__file__).resolve().parent / "images" / "Space-Shooter_objects" / "PNG" / "Sprites" / "Missile"
         variants = {}
-        missile_scale = 0.20
+        missile_scale = 0.10
         for variant in ("3", "2", "1"):
             flight_paths = _select_index_range(sorted(root.glob(f"Missile_{variant}_Flying_*.png")), "Flying", 0, 9)
             explode_paths = _select_index_range(sorted(root.glob(f"Missile_{variant}_Explosion_*.png")), "Explosion", 0, 8)

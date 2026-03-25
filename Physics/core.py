@@ -1,8 +1,8 @@
 """
-Physics/core.py - Base RigidBody class for physics-enabled entities
+Physics/core.py - Perus RigidBody-luokka fysiikkaolioille
 
-Provides unified physics simulation for all game objects (player, enemies, projectiles).
-Each entity maintains position, velocity, acceleration, mass, and can have forces applied.
+Tarjoaa yhtenäisen fysiikkasimulaation kaikille pelin objekteille (pelaaja, viholliset, ammukset).
+Jokainen olio ylläpitää sijaintia, nopeutta, kiihtyvyyttä, massaa ja niihin voidaan kohdistaa voimia.
 """
 
 import pygame
@@ -11,37 +11,37 @@ import math
 
 class RigidBody:
     """
-    Base class for all physics-enabled objects in the game.
+    Perusluokka kaikille pelin fysiikkaolioille.
     
-    Handles:
-    - Position and velocity tracking
-    - Force accumulation and application
-    - Velocity constraints (max speed)
-    - Integration: forces -> acceleration -> velocity -> position
+    Vastaa seuraavista:
+    - Sijainnin ja nopeuden seuranta
+    - Voimien kerääminen ja soveltaminen
+    - Nopeusrajoitukset (maksiminopeus)
+    - Integraatio: voimat -> kiihtyvyys -> nopeus -> sijainti
     
-    Attributes:
-        pos (pygame.Vector2): Position in world space
-        vel (pygame.Vector2): Velocity vector (pixels/second)
-        acc (pygame.Vector2): Accumulated acceleration (cleared each frame)
-        mass (float): Physical mass (kg equivalent)
-        inv_mass (float): Cached 1/mass for optimization
-        collision_radius (float): Radius for collision detection
-        max_speed (float|None): Optional maximum speed constraint
-        forces (list): List of Force objects to apply each frame
-        is_dynamic (bool): Can this body be affected by forces?
+    Attribuutit:
+        pos (pygame.Vector2): Sijainti maailmassa
+        vel (pygame.Vector2): Nopeusvektori (pikseliä/sekunti)
+        acc (pygame.Vector2): Kertyvä kiihtyvyys (nollataan joka ruudun jälkeen)
+        mass (float): Massa (kg vastaava)
+        inv_mass (float): Esilaskettu 1/massa optimointia varten
+        collision_radius (float): Säde törmäyksentunnistukseen
+        max_speed (float|None): Valinnainen maksiminopeus
+        forces (list): Lista Force-olioista, jotka sovelletaan joka ruutu
+        is_dynamic (bool): Voiko tähän kappaleeseen vaikuttaa voimat?
     """
     
     def __init__(self, x=0, y=0, mass=1.0):
         """
-        Initialize a physics body.
+        Alustaa fysiikkaolion.
         
-        Args:
-            x (float): Initial X position
-            y (float): Initial Y position
-            mass (float): Physical mass (default 1.0)
+        Parametrit:
+            x (float): Alkusijainti X-akselilla
+            y (float): Alkusijainti Y-akselilla
+            mass (float): Massa (oletus 1.0)
         
-        Raises:
-            ValueError: If mass is zero or negative
+        Poikkeukset:
+            ValueError: Jos massa on nolla tai negatiivinen
         """
         if mass <= 0:
             raise ValueError("Mass must be positive")
@@ -61,23 +61,23 @@ class RigidBody:
     
     def add_force(self, force):
         """
-        Add a force to be applied during next update().
+        Lisää voima, joka sovelletaan seuraavassa update()-kutsussa.
         
-        Args:
-            force (Force): A Force object with get_force(body, dt) method
+        Parametrit:
+            force (Force): Force-olio, jolla on get_force(body, dt) -metodi
         """
         if force is not None:
             self.forces.append(force)
     
     def apply_forces(self, dt):
         """
-        Sum all forces and convert to acceleration.
+        Summaa kaikki voimat ja muuntaa ne kiihtyvyydeksi.
         
-        F = ma => a = F/m (sum of all forces divided by mass)
-        Clears force list after application.
+        F = ma => a = F/m (kaikkien voimien summa jaettuna massalla)
+        Tyhjentää voimien listan käytön jälkeen.
         
-        Args:
-            dt (float): Delta time in seconds
+        Parametrit:
+            dt (float): Aikaväli sekunneissa
         """
         self.acc = pygame.Vector2(0, 0)
         
@@ -94,9 +94,9 @@ class RigidBody:
     
     def apply_velocity_constraints(self):
         """
-        Apply maximum speed constraint if set.
+        Soveltaa maksiminopeusrajoituksen, jos asetettu.
         
-        Clamps velocity to max_speed by scaling velocity vector.
+        Rajaa nopeuden max_speed-arvoon skaalaamalla nopeusvektoria.
         """
         if self.max_speed is not None and self.max_speed > 0:
             speed = self.vel.length()
@@ -105,34 +105,34 @@ class RigidBody:
     
     def update_velocity(self, dt):
         """
-        Update velocity from acceleration: v += a*dt
+        Päivittää nopeuden kiihtyvyydestä: v += a*dt
         
-        Then apply velocity constraints.
+        Soveltaa myös nopeusrajoitukset.
         
-        Args:
-            dt (float): Delta time in seconds
+        Parametrit:
+            dt (float): Aikaväli sekunneissa
         """
         self.vel += self.acc * dt
         self.apply_velocity_constraints()
     
     def update_position(self, dt):
         """
-        Update position from velocity: pos += v*dt
+        Päivittää sijainnin nopeudesta: pos += v*dt
         
-        Args:
-            dt (float): Delta time in seconds
+        Parametrit:
+            dt (float): Aikaväli sekunneissa
         """
         self.pos += self.vel * dt
     
     def update(self, dt):
         """
-        Perform complete physics step:
-        1. Apply forces -> acceleration
-        2. Update velocity with acceleration
-        3. Update position with velocity
+        Suorittaa koko fysiikka-askeleen:
+        1. Soveltaa voimat -> kiihtyvyys
+        2. Päivittää nopeuden kiihtyvyydellä
+        3. Päivittää sijainnin nopeudella
         
-        Args:
-            dt (float): Delta time in seconds
+        Parametrit:
+            dt (float): Aikaväli sekunneissa
         """
         if not self.is_dynamic:
             return
@@ -142,12 +142,12 @@ class RigidBody:
         self.update_position(dt)
     
     def set_velocity(self, vx, vy):
-        """Set velocity directly."""
+        """Aseta nopeus suoraan."""
         self.vel = pygame.Vector2(vx, vy)
         self.apply_velocity_constraints()
     
     def get_speed(self):
-        """Get current speed magnitude."""
+        """Palauttaa nykyisen nopeuden suuruuden."""
         return self.vel.length()
     
     def __repr__(self):

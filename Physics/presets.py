@@ -1,8 +1,8 @@
 """
-Physics/presets.py - Predefined physics profiles for enemy types
+Physics/presets.py - Ennalta määritetyt fysiikkaprofiilit eri vihollistyypeille
 
-Centralizes enemy physics configuration: mass, max_speed, forces, etc.
-Makes it easy to tune enemy difficulty and behavior globally.
+Keskitetty vihollisten fysiikka-asetusten hallinta: massa, maksiminopeus, voimat jne.
+Helpottaa vihollisten vaikeustason ja käyttäytymisen säätämistä globaalisti.
 """
 
 import pygame

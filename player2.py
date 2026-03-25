@@ -5,6 +5,9 @@ from Box2D import b2Vec2
 from PLAYER_LUOKAT.PlayerInput import PlayerInput
 from PLAYER_LUOKAT.PlayerWeapons import PlayerWeapons
 
+# Debug: näytä spriten ja rectin keskikohdat + offset (aseta False poistaaksesi)
+# rivi 274: self.show_physics_debug_vectors = True
+
 # Collision sizing defaults for player sprite.
 # Tweak these to change how big the player's circular collision area is.
 PLAYER2_DEFAULT_COLLISION_FACTOR = 0.2
@@ -271,7 +274,7 @@ class Player2(pygame.sprite.Sprite):
 
         # Debug: näytä spriten ja rectin keskikohdat + offset (aseta False poistaaksesi)
         self.show_center_debug = False
-        self.show_physics_debug_vectors = True
+        self.show_physics_debug_vectors = False
         self._debug_font = pygame.font.SysFont('Consolas', 14)
 
         # attack frames (jos niitä ei löytynyt aiemmin, varmistetaan kentät)

@@ -1,12 +1,18 @@
 """
-Physics module - Unified physics engine for RocketGame
+Fysiikkamoduuli - Yhtenäinen fysiikkamoottori RocketGame-pelille
 
-Provides:
-- RigidBody: Base physics class for all entities
-- Forces: Gravity, Drag, Magnetism, Thrust
-- Animations: DampedOscillator for collision bounces
-- Presets: Predefined physics profiles for enemy types
+Tarjoaa:
+- RigidBody: Fysiikan kantaluokka kaikille entiteeteille (pelaaja, viholliset, ammukset)
+- Forces (Voimat): Painovoima, ilmanvastus, magnetismi, työntövoima
+- Animations (Animaatiot): Vaimennettu värähtelijä (DampedOscillator) törmäyspompuille
+- Presets (Esiasetukset): Ennalta määritetyt fysiikkaprofiilit eri vihollistyypeille
+- Box2D-integraatio: Valinnaiset edistyneet fysiikkasimulaatiot Box2D-kirjastolla
+- Collision Categories (Törmäyskategoriat): Määrittele, mitkä objektit voivat törmätä keskenään
+- Yhtenäinen API: Kaikki fysiikkaobjektit ja -toiminnot on keskitetty tähän moduuliin, mikä helpottaa ylläpitoa, 
+  laajennettavuutta ja johdonmukaisuutta pelin fysiikkalogiikassa.
+  
 """
+
 
 from Physics.core import RigidBody
 from Physics.forces import Force, Gravity, Drag, Magnetism, Thrust
