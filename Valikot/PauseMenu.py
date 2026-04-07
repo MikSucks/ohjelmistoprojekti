@@ -34,13 +34,14 @@ class PauseMenu:
         button_width = 300
         button_height = 78
         button_spacing = 22
-        total_height = 3 * button_height + 2 * button_spacing
+        total_height = 4 * button_height + 3 * button_spacing
         start_y = self.panel_rect.top + 170 + (self.panel_rect.height - 240 - total_height) // 2
         center_x = width // 2 - button_width // 2
         self.buttons = [
             MenuButton(center_x, start_y, button_width, button_height, "CONTINUE", action="continue", variant="success"),
             MenuButton(center_x, start_y + button_height + button_spacing, button_width, button_height, "SETTINGS", action="settings"),
-            MenuButton(center_x, start_y + 2 * (button_height + button_spacing), button_width, button_height, "QUIT", action="quit", variant="danger"),
+            MenuButton(center_x, start_y + 2 * (button_height + button_spacing), button_width, button_height, "SAVE & QUIT", action="save_quit"),
+            MenuButton(center_x, start_y + 3 * (button_height + button_spacing), button_width, button_height, "QUIT", action="quit", variant="danger"),
         ]
     
     def __init__(self, screen=None):
@@ -56,13 +57,14 @@ class PauseMenu:
         button_width = 300
         button_height = 78
         button_spacing = 22
-        total_height = 3 * button_height + 2 * button_spacing
+        total_height = 4 * button_height + 3 * button_spacing
         start_y = self.panel_rect.top + 170 + (self.panel_rect.height - 240 - total_height) // 2
         center_x = SCREEN_WIDTH // 2 - button_width // 2
         self.buttons = [
             MenuButton(center_x, start_y, button_width, button_height, "CONTINUE", action="continue", variant="success"),
             MenuButton(center_x, start_y + button_height + button_spacing, button_width, button_height, "SETTINGS", action="settings"),
-            MenuButton(center_x, start_y + 2 * (button_height + button_spacing), button_width, button_height, "QUIT", action="quit", variant="danger"),
+            MenuButton(center_x, start_y + 2 * (button_height + button_spacing), button_width, button_height, "SAVE & QUIT", action="save_quit"),
+            MenuButton(center_x, start_y + 3 * (button_height + button_spacing), button_width, button_height, "QUIT", action="quit", variant="danger"),
         ]
         self.clock = pygame.time.Clock()
         self.running = True
@@ -91,6 +93,8 @@ class PauseMenu:
         if action == "settings":
             settings_menu_main()
             return None
+        if action == "save_quit":
+            return "save_quit"
         if action == "quit":
             return "quit"
         return None

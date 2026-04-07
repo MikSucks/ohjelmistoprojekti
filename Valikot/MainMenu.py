@@ -5,6 +5,7 @@ from Valikot.menu_style import (
     draw_dim_overlay,
     draw_menu_panel,
 )
+from SaveGame import SaveGameManager
 
 
 
@@ -98,14 +99,35 @@ class MainMenu:
         panel_top = height // 2 - self.panel_height // 2
         self.panel_rect = pygame.Rect(panel_left, panel_top, self.panel_width, self.panel_height)
 
-        total_height = 3 * self.button_height + 2 * self.button_spacing
+        # Tarkista onko savegame olemassa - vaikuttaa nappivälin määrään
+        has_save = SaveGameManager.has_savegame()
+        num_buttons = 4 if has_save else 3
+        total_height = num_buttons * self.button_height + (num_buttons - 1) * self.button_spacing
         start_y = self.panel_rect.top + 170 + (self.panel_rect.height - 240 - total_height) // 2
         center_x = width // 2 - self.button_width // 2
 
-        self.buttons = [
+        self.buttons = []
+        button_y = start_y
+        
+        # Lisää Continue-nappi jos savegame on olemassa
+        if has_save:
+            self.buttons.append(
+                MenuButton(
+                    center_x,
+                    button_y,
+                    self.button_width,
+                    self.button_height,
+                    "CONTINUE",
+                    action="continue",
+                    variant="success",
+                )
+            )
+            button_y += self.button_height + self.button_spacing
+
+        self.buttons.extend([
             MenuButton(
                 center_x,
-                start_y,
+                button_y,
                 self.button_width,
                 self.button_height,
                 "START GAME",
@@ -113,7 +135,7 @@ class MainMenu:
             ),
             MenuButton(
                 center_x,
-                start_y + self.button_height + self.button_spacing,
+                button_y + self.button_height + self.button_spacing,
                 self.button_width,
                 self.button_height,
                 "SETTINGS",
@@ -121,14 +143,14 @@ class MainMenu:
             ),
             MenuButton(
                 center_x,
-                start_y + 2 * (self.button_height + self.button_spacing),
+                button_y + 2 * (self.button_height + self.button_spacing),
                 self.button_width,
                 self.button_height,
                 "QUIT",
                 action="quit",
                 variant="danger",
             ),
-        ]
+        ])
         
         # Menu backdrop: draw scene-like background and translucent veil
         # instead of a flat solid color.
@@ -142,11 +164,16 @@ class MainMenu:
         except Exception:
             self.background_image = None
         
-        self.text_input.set_rect(center_x, start_y + 3 * (self.button_height + self.button_spacing), self.button_width, 40)
+        # Aseta nimen inputkentän sijainti panelin yläpuolelle
+        input_y = self.panel_rect.top - 70
+        self.text_input.set_rect(center_x, input_y, self.button_width, 40)
 
     def handle_events(self, events):
         """Handle a frame's events and return selected action or None."""
         for event in events:
+            # Käsittele text input ensin
+            self.text_input.handle_event(event)
+            
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button in self.buttons:
                     if button.is_clicked(event.pos):
@@ -172,6 +199,5 @@ class MainMenu:
             button.update(mouse_pos)
             button.draw(surface)
         
-        self.text_input.handle_event(pygame.event.poll())
         self.text_input.draw(surface)
         self.text_input.save_to_file('player_name.txt')
