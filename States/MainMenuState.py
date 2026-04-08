@@ -101,8 +101,8 @@ class MainMenuState(GameState):
             except Exception as exc:
                 print(f"Virhe pelin jatkamisessa: {exc}")
 
+
         elif action == "start":
-        if action == "start":
             # SOITA PELIN ALKAA -ÄÄNI
             self.manager.sounds.play_sfx("game_start")
             try:
